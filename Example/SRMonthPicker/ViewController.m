@@ -36,7 +36,7 @@
     // A convenience method that formats the date in Month-Year format
     
     NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
-    formatter.dateFormat = @"MMMM y";
+    formatter.dateFormat = @"MMM y";
     return [formatter stringFromDate:date];
 }
 
@@ -46,6 +46,14 @@
     
     // I will be using the delegate here
     self.monthPicker.monthPickerDelegate = self;
+    
+    self.monthPicker.yearFormatter = [[NSDateFormatter alloc] init];
+    self.monthPicker.yearFormatter.calendar = self.monthPicker.calendar;
+    self.monthPicker.yearFormatter.dateFormat = @"yyyy年";
+    
+    self.monthPicker.monthFormatter = [[NSDateFormatter alloc] init];
+    self.monthPicker.monthFormatter.calendar = self.monthPicker.calendar;
+    self.monthPicker.monthFormatter.dateFormat = @"MMM";
     
     // Set the label to show the date
     self.label.text = [NSString stringWithFormat:@"Selected: %@", [self formatDate:self.monthPicker.date]];

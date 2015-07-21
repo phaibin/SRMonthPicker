@@ -109,6 +109,9 @@
 /// en-US alias for `fontColour`.
 @property (nonatomic, strong, getter = fontColour, setter = setFontColour:) IBInspectable UIColor *fontColor;
 
+@property (nonatomic, strong) NSDateFormatter* monthFormatter;
+@property (nonatomic, strong) NSDateFormatter* yearFormatter;
+
 /**
   Designated initialiser.
 

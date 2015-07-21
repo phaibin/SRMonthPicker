@@ -35,8 +35,6 @@
 @property (nonatomic) NSInteger monthComponent;
 @property (nonatomic) NSInteger yearComponent;
 @property (nonatomic, strong, readonly) NSArray* monthStrings;
-@property (nonatomic, strong, readonly) NSDateFormatter* monthFormatter;
-@property (nonatomic, strong, readonly) NSDateFormatter* yearFormatter;
 
 -(void)p_prepare;
 -(NSInteger)p_yearFromRow:(NSUInteger)row;
@@ -57,6 +55,8 @@ static const NSCalendarUnit SRDateComponentFlags = NSCalendarUnitMonth | NSCalen
     
     if (self)
     {
+        [self initFormatter];
+        
         _calendar = calendar;
         [self p_prepare];
         [self setDate:date];
@@ -84,6 +84,8 @@ static const NSCalendarUnit SRDateComponentFlags = NSCalendarUnitMonth | NSCalen
     
     if (self)
     {
+        [self initFormatter];
+        
         _minimumYear = SRDefaultMinimumYear;
         _maximumYear = SRDefaultMaximumYear;
         [self p_prepare];
@@ -102,6 +104,8 @@ static const NSCalendarUnit SRDateComponentFlags = NSCalendarUnitMonth | NSCalen
     
     if (self)
     {
+        [self initFormatter];
+        
         _minimumYear = SRDefaultMinimumYear;
         _maximumYear = SRDefaultMaximumYear;
         
@@ -113,6 +117,16 @@ static const NSCalendarUnit SRDateComponentFlags = NSCalendarUnitMonth | NSCalen
     }
     
     return self;
+}
+
+- (void)initFormatter {
+    self.yearFormatter = [[NSDateFormatter alloc] init];
+    self.yearFormatter.calendar = self.calendar;
+    self.yearFormatter.dateFormat = @"y";
+    
+    self.monthFormatter = [[NSDateFormatter alloc] init];
+    self.monthFormatter.calendar = self.calendar;
+    self.monthFormatter.dateFormat = @"MMMM";
 }
 
 -(id<UIPickerViewDelegate>)delegate
@@ -145,28 +159,6 @@ static const NSCalendarUnit SRDateComponentFlags = NSCalendarUnitMonth | NSCalen
 -(NSInteger)yearComponent
 {
     return !self.yearFirst;
-}
-
--(NSDateFormatter *)monthFormatter {
-    static NSDateFormatter *formatter;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        formatter = [[NSDateFormatter alloc] init];
-        formatter.calendar = self.calendar;
-        formatter.dateFormat = @"MMMM";
-    });
-    return formatter;
-}
-
--(NSDateFormatter *)yearFormatter {
-    static NSDateFormatter *formatter;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        formatter = [[NSDateFormatter alloc] init];
-        formatter.calendar = self.calendar;
-        formatter.dateFormat = @"y";
-    });
-    return formatter;
 }
 
 -(NSArray *)monthStrings
@@ -277,10 +269,7 @@ static const NSCalendarUnit SRDateComponentFlags = NSCalendarUnitMonth | NSCalen
 
 -(CGFloat)pickerView:(UIPickerView *)pickerView widthForComponent:(NSInteger)component
 {
-    if (component == self.monthComponent)
-        return 150.0f;
-    else
-        return 76.0f;
+    return 100;
 }
 
 -(UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row forComponent:(NSInteger)component reusingView:(UIView *)view
@@ -304,13 +293,23 @@ static const NSCalendarUnit SRDateComponentFlags = NSCalendarUnitMonth | NSCalen
     NSDateFormatter* formatter = nil;
     
     if (component == self.monthComponent) {
-        label.text = [self.monthStrings objectAtIndex:(row % self.monthStrings.count)];
         label.textAlignment = component ? NSTextAlignmentLeft : NSTextAlignmentRight;
         formatter = self.monthFormatter;
+        
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"M"];
+        NSDate *date = [dateFormatter dateFromString:[NSString stringWithFormat:@"%ld", row % 12+1]];
+        
+        label.text = [formatter stringFromDate:date];
+        
     } else {
         formatter = self.yearFormatter;
+
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"yyyy"];
+        NSDate *date = [dateFormatter dateFromString:[NSString stringWithFormat:@"%ld", (long)[self p_yearFromRow:row]]];
         
-        label.text = [NSString stringWithFormat:@"%ld", (long)[self p_yearFromRow:row]];
+        label.text = [formatter stringFromDate:date];
         label.textAlignment = NSTextAlignmentCenter;
     }
     
@@ -357,7 +356,7 @@ static const NSCalendarUnit SRDateComponentFlags = NSCalendarUnitMonth | NSCalen
     self.enableColourRow = YES;
     self.wrapMonths = YES;
     
-    self.font = [UIFont boldSystemFontOfSize:24.0f];
+    self.font = [UIFont systemFontOfSize:22.0f];
     self.fontColor = [UIColor blackColor];
 }
 
